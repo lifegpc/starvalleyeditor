@@ -18,3 +18,4 @@ AI/
 gamedata/
 # npm
 node_modules/
+package-lock.json

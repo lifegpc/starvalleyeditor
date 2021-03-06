@@ -1,4 +1,8 @@
 {
     "name": "Stardew Valley Save Editor",
-    "main": "src/index.html"
+    "main": "src/index.html",
+    "dependencies": {
+        "js-yaml": "^4.0.0",
+        "os-locale": "^5.0.0"
+    }
 }

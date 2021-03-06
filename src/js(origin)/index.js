@@ -1,6 +1,49 @@
 window["eventMap"] = {}
 window["tempEventMap"] = {}
 var require = window.hasOwnProperty("require") ? window['require'] : null;
+const fs = require('fs');
+const oslocale = require('os-locale');
+const jsyaml = require('js-yaml');
+
+/**
+ * 获取语言
+ */
+function getLang() {
+    var temp = oslocale.sync();
+    var List = ['de-DE', 'es-ES', 'fr-FR', 'hu-HU', 'it-IT', 'ja-JP', 'ko-KR', 'pt-BR', 'ru-RU', 'tr-TR', 'zh-CN'];
+    var re = '';
+    List.forEach((l) => {
+        if (re != '') return;
+        if (l.startsWith(temp.substr(0, 2))) re = l;
+    })
+    return re;
+}
+/**
+ * 加载游戏数据
+ * @param {string} name 名字
+ */
+function loadGameData(name) {
+    var t = lang != '' ? "." + lang : "";
+    return jsyaml.load(fs["readFileSync"]("gamedata/" + name + t + ".yaml"));
+}
+
+var lang = getLang();
+console.log(lang);
+const NPCDispositions = loadGameData('NPCDispositions');
+console.log(NPCDispositions);
+const UI = loadGameData("UI");
+console.log(UI);
+
+/**
+ * 获取NPC名字
+ * @param {string} name 原名
+ * @returns {string}
+ */
+function getNPCName(name) {
+    /**@type {string}*/
+    var str = NPCDispositions["content"][name];
+    return str.substring(str.lastIndexOf("/") + 1, str.length);
+}
 
 window.addEventListener('load', () => {
     /**@type {HTMLInputElement}*/
@@ -61,12 +104,7 @@ window.addEventListener('load', () => {
             alert("No file selected. Please choose a file name in left button.")
             return;
         }
-        if (null == require) {
-            alert('Can not use node.js');
-            return;
-        }
         try {
-            var fs = require('fs');
             /**@type {Document?}*/
             var doc = window.hasOwnProperty("doc") ? window["doc"] : null;
             if (doc == null) {
@@ -438,7 +476,7 @@ function createFriendShipTable(data) {
         var row = document.createElement('tr');
         var td = document.createElement('td');
         td.classList.add("first");
-        td.innerText = d["name"];
+        td.innerText = getNPCName(d["name"]);
         row.append(td);
         td = document.createElement('td');
         var inp = document.createElement('input');
@@ -545,7 +583,7 @@ function calLevel(exp) {
  * 根据ID获取职业名称
  * @param {number|string} id 职业ID
  */
-function getProfessionName(id) {
+function getProfessionNameOrigin(id) {
     var num = typeof id == "string" ? parseInt(id) : id;
     if (num == 0) return "Rancher";
     if (num == 1) return "Tiller";
@@ -577,6 +615,16 @@ function getProfessionName(id) {
     if (num == 27) return "Defender";
     if (num == 28) return "Acrobat";
     return "Desperado";
+}
+
+/**
+ * 根据ID获取职业名称
+ * @param {number|string} id 职业ID
+ * @returns {string}
+ */
+ function getProfessionName(id) {
+    var str = "LevelUp_ProfessionName_" + getProfessionNameOrigin(id);
+    return UI["content"][str];
 }
 
 /**@type {Object.<number, Object.<number, Array<number>>>} 第一层，技能类别，第二层，5级时技能。*/
