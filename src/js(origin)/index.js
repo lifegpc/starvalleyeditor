@@ -628,7 +628,9 @@ function getProfessionName(id) {
 }
 
 /**
- * 
+ * 根据ID获取职业描述
+ * @param {number|string} id 职业ID
+ * @returns {string}
  */
 function getProfessionDescription(id) {
     var str = "LevelUp_ProfessionDescription_" + getProfessionNameOrigin(id);
