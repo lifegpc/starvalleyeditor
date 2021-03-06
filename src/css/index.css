@@ -1,0 +1,83 @@
+ul#playertab, #playertab li {
+    margin: 0;
+    padding: 0;
+    padding-top: 10px;
+    list-style: none;
+}
+
+#playertab li {
+    float: left;
+    background-color: #dfffb5;
+    color: black;
+    padding: 5px;
+    margin-right: 2px;
+    border: 1px solid #c5ff78;
+    cursor: pointer;
+}
+
+#playertab li.selected {
+    background-color: #c5ff78;
+    border: 1px solid #dfffb5;
+}
+
+#playerContentList > div {
+    clear: left;
+    background-color: #c5ff78;
+    color: black;
+    width: calc(100% - 2 * 10px);
+    height: 80vh;
+    min-height: 300px;
+    padding: 10px;
+    display: none;
+}
+
+#playerContentList > div.display {
+    display: block;
+    overflow: auto;
+}
+
+table {
+    border-collapse:collapse;
+}
+
+td {
+    border-bottom: 1px solid black;
+    border-right: 1px solid black;
+    margin: 0;
+}
+
+tr.first > td {
+    border-top: 1px solid black;
+}
+
+td.first {
+    border-left: 1px solid black;
+}
+
+div.fold > div.icon {
+    background-image: url("/src/svg/fold-normal.svg");
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+}
+
+div.fold > div.icon.hover {
+    background-image: url("/src/svg/fold-hover.svg");
+}
+
+div.fold.opened > div.icon {
+    background-image: url("/src/svg/fold-opened-normal.svg");
+}
+
+div.fold.opened > div.icon.hover {
+    background-image: url("/src/svg/fold-opened-hover.svg");
+}
+
+div.fold > div.folddiv {
+    margin-left: 20px;
+    display: none;
+}
+
+div.fold.opened > div.folddiv {
+    display: inherit;
+}

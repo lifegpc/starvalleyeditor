@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link type="text/css" rel="stylesheet" href="css/index.css"/>
+        <script src="js/index.js"></script>
+    </head>
+    <body>
+        Save File: <input type="file" id="input" webkitdirectory><button id="open">Open</button><br/>
+        <input id="save" type="file" nwsaveas><button id="saveb">Save</button><br/>
+        <div class="content">
+            Game version: <label id="gamev"></label><br/>
+            Time: Year <input type="number" id="year" style="width: 40px;" min="1"> <select id="season"><option value="spring">Spring</option><option value="summer">Summer</option><option value="fall">Fall</option><option value="winter">Winter</option></select> Day <input type="number" id="day" style="width: 35px;" min="1" max="28"><br/>
+            Player: <br/>
+            <ul id="playertab"></ul>
+            <div id="playerContentList"></div>
+        </div>
+    </body>
+</html>

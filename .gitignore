@@ -1,0 +1,16 @@
+# nw.js file
+*.exe
+credits.html
+*.dll
+*.pak
+*.dat
+*.nexe
+*.bin
+pnacl/
+locales/
+swiftshader/
+# Closure Compiler
+*.jar
+src/js/*
+# svg source
+AI/
