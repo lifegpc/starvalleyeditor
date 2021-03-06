@@ -622,8 +622,16 @@ function getProfessionNameOrigin(id) {
  * @param {number|string} id 职业ID
  * @returns {string}
  */
- function getProfessionName(id) {
+function getProfessionName(id) {
     var str = "LevelUp_ProfessionName_" + getProfessionNameOrigin(id);
+    return UI["content"][str];
+}
+
+/**
+ * 
+ */
+function getProfessionDescription(id) {
+    var str = "LevelUp_ProfessionDescription_" + getProfessionNameOrigin(id);
     return UI["content"][str];
 }
 
@@ -828,15 +836,18 @@ function createExpDiv(node, levelArr, professions) {
                 op.innerText = 'Unavailable';
                 sel.append(op);
                 sel.value = '-1';
+                sel.title = '';
             } else {
                 sel.innerHTML = '';
                 pros.forEach((i) => {
                     var op = document.createElement('option');
                     op.value = i;
                     op.innerText = getProfessionName(i);
+                    op.title = getProfessionDescription(i);
                     sel.append(op);
                 });
                 sel.value = value;
+                sel.title = getProfessionDescription(value);
             }
         }
         var level = parseInt(levelArr[skillType].innerHTML);
