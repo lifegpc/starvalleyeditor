@@ -14,3 +14,7 @@ swiftshader/
 src/js/*
 # svg source
 AI/
+# game data
+gamedata/
+# npm
+node_modules/
