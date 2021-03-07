@@ -42,6 +42,7 @@ console.log(UI);
 function getNPCName(name) {
     /**@type {string}*/
     var str = NPCDispositions["content"][name];
+    if (str == undefined) return name;
     return str.substring(str.lastIndexOf("/") + 1, str.length);
 }
 
