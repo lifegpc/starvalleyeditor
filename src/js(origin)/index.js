@@ -80,6 +80,8 @@ const EVENTS = loadGameEventsData();
 console.log(EVENTS);
 const NPCNames = loadGameData("Strings/NPCNames");
 console.log(NPCNames);
+const Achievements = loadGameData("Data/Achievements");
+console.log(Achievements);
 
 /**
  * 获取NPC名字
@@ -113,6 +115,28 @@ function getEventsStrById(id) {
         });
     })
     return s;
+}
+
+/**
+ * 根据Id，获取成就名称
+ * @param {number} id
+ * @returns {string?} 
+ */
+function getAchievementsName(id) {
+    let s = Achievements['content'][id];
+    if (s == undefined) return null;
+    return s.split('^')[0];
+}
+
+/**
+ * 根据Id，获取成就描述
+ * @param {number} id
+ * @returns {string?} 
+ */
+function getAchievementsDescription(id) {
+    let s = Achievements['content'][id];
+    if (s == undefined) return null;
+    return s.split('^')[1];
 }
 
 window.addEventListener('load', () => {
@@ -1165,6 +1189,29 @@ function dealEventsSeen(node, opd) {
     return n;
 }
 
+/**
+ * 处理成就
+ * @param {Element} node
+ * @returns {HTMLDivElement}
+ */
+function dealAchievements(node) {
+    let nd = document.createElement('div');
+    let l = IntArrElementToArr(node);
+    l.forEach((i) => {
+        let n = getAchievementsName(i);
+        if (n) {
+            let d = document.createElement('div');
+            d.style.display = 'inline-block';
+            d.append(n + ": " + getAchievementsDescription(i));
+            nd.append(d);
+            addBrToElement(nd);
+        } else {
+            console.log('Unknown achievements id: ', i);
+        }
+    })
+    return nd;
+}
+
 function dealXML() {
     /**@type {Document}*/
     var doc = window['doc'];
@@ -1376,6 +1423,12 @@ function dealXML() {
             let evdiv = dealEventsSeen(l2[0], tinfo);
             let evdivf = createFoldDiv(evdiv, "Events Seen")
             page.append(evdivf);
+        }
+        l2 = getElementsByTagInFirst(v, "achievements");
+        if (l2.length) {
+            let achdiv = dealAchievements(l2[0]);
+            let achdivf = createFoldDiv(achdiv, "Achievements");
+            page.append(achdivf);
         }
         if (firstTab) {
             tab.classList.add("selected");
