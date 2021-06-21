@@ -86,7 +86,7 @@ class main:
         for fn in fl:
             jsf += f' --js "js(origin)/{fn}"'
         dcm = f' --create_source_map "js/{fn}.map"' if self._debug else ""
-        if system(f'{self._java} -jar compiler.jar{jsf} --compilation_level ADVANCED_OPTIMIZATIONS --js_output_file "js/{fn}"{dcm}') != 0:
+        if system(f'{self._java} -jar compiler.jar{jsf} --compilation_level ADVANCED_OPTIMIZATIONS --language_in ECMASCRIPT_2019 --language_out ECMASCRIPT_2019 --js_output_file "js/{fn}"{dcm}') != 0:
             raise Exception('Error in compiler.')
 
 

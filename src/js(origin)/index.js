@@ -5,14 +5,15 @@ const fs = require('fs');
 const oslocale = require('os-locale');
 const jsyaml = require('js-yaml');
 
+let LangList = ['de-DE', 'es-ES', 'fr-FR', 'hu-HU', 'it-IT', 'ja-JP', 'ko-KR', 'pt-BR', 'ru-RU', 'tr-TR', 'zh-CN'];
+
 /**
  * 获取语言
  */
 function getLang() {
     var temp = oslocale.sync();
-    var List = ['de-DE', 'es-ES', 'fr-FR', 'hu-HU', 'it-IT', 'ja-JP', 'ko-KR', 'pt-BR', 'ru-RU', 'tr-TR', 'zh-CN'];
     var re = '';
-    List.forEach((l) => {
+    LangList.forEach((l) => {
         if (re != '') return;
         if (l.startsWith(temp.substr(0, 2))) re = l;
     })
@@ -24,15 +25,61 @@ function getLang() {
  */
 function loadGameData(name) {
     var t = lang != '' ? "." + lang : "";
-    return jsyaml.load(fs["readFileSync"]("gamedata/" + name + t + ".yaml"));
+    let n = "gamedata/" + name + t + ".yaml";
+    if (fs["existsSync"](n)) {
+        console.log("Load " + n);
+        return jsyaml.load(fs["readFileSync"](n));
+    } else {
+        n = "gamedata/" + name + ".yaml";
+        console.log("Load " + n);
+        return jsyaml.load(fs["readFileSync"](n));
+    }
+}
+
+/**
+ * 加载Events数据
+ * @returns {Array<string>|Array<number>|Array<object>}
+ */
+function loadGameEventsData() {
+    let l = fs["readdirSync"]("gamedata/Data/Events/");
+    /**@type {Array<string>|Array<number>|Array<object>}*/
+    let r = [];
+    let t = lang != '' ? "." + lang : "";
+    /**@type {Array<string>}*/
+    let ll = [];
+    l.forEach((v) => {
+        if (v.endsWith(".yaml")) {
+            for (let i = 0; i < LangList.length; i++) {
+                if (v.endsWith("." + LangList[i] + ".yaml")) return;
+            }
+            if (!t) {
+                let n = "gamedata/Data/Events/" + v;
+                console.log("Load " + n);
+                r.push(jsyaml.load(fs["readFileSync"](n)));
+            } else {
+                ll.push(v.replace('.yaml', ''));
+            }
+        }
+    })
+    if (t) {
+        ll.forEach((v) => {
+            let l = loadGameData("Data/Events/" + v);
+            if (l) r.push(l);
+        })
+    }
+    return r;
 }
 
 var lang = getLang();
 console.log(lang);
-const NPCDispositions = loadGameData('NPCDispositions');
+const NPCDispositions = loadGameData('Data/NPCDispositions');
 console.log(NPCDispositions);
-const UI = loadGameData("UI");
+const UI = loadGameData("Strings/UI");
 console.log(UI);
+const EVENTS = loadGameEventsData();
+console.log(EVENTS);
+const NPCNames = loadGameData("Strings/NPCNames");
+console.log(NPCNames);
 
 /**
  * 获取NPC名字
@@ -42,8 +89,30 @@ console.log(UI);
 function getNPCName(name) {
     /**@type {string}*/
     var str = NPCDispositions["content"][name];
-    if (str == undefined) return name;
+    if (str == undefined) {
+        str = NPCNames["content"][name];
+        if (str == undefined) return name;
+        return str;
+    }
     return str.substring(str.lastIndexOf("/") + 1, str.length);
+}
+
+/**
+ * 根据Id，获取事件
+ * @param {number} id ID
+ * @returns {string?}
+ */
+function getEventsStrById(id) {
+    if (id == -2) return null;
+    let s = null;
+    EVENTS.forEach((v) => {
+        if (s != null) return;
+        Object.getOwnPropertyNames(v["content"]).forEach((k) => {
+            if (s != null) return;
+            if (k.split("/")[0] == id.toString()) s = v["content"][k];
+        });
+    })
+    return s;
 }
 
 window.addEventListener('load', () => {
@@ -966,6 +1035,136 @@ function createExpDiv(node, levelArr, professions) {
     return div;
 }
 
+class TextInfoD {
+    constructor(d) {
+        this.data = Object.assign({}, d);
+    }
+    get farmName() {
+        if (this.data.hasOwnProperty("farmName")) {
+            if (typeof this.data["farmName"] == "string") return this.data["farmName"];
+        }
+        return null;
+    }
+    set farmName(v) {
+        if (typeof v == "string") {
+            this.data["farmName"] = v;
+        }
+    }
+    get name() {
+        if (this.data.hasOwnProperty("name")) {
+            if (typeof this.data["name"] == "string") return this.data["name"];
+        }
+        return null;
+    }
+    set name(v) {
+        if (typeof v == "string") {
+            this.data["name"] = v;
+        }
+    }
+}
+
+/**
+ * 清除一些对话里的奇怪玩意
+ * @param {string} s
+ * @param {TextInfoD} d
+ * @returns {string} 
+ */
+function dealTextInDialog(s, d) {
+    let t = s.replace('#$b#', '\n');
+    while (t.indexOf("#$b#") > -1) {
+        t = t.replace("#$b#", '\n');
+    }
+    if (d.farmName) {
+        let fn = d.farmName;
+        while (t.indexOf('%farm') > -1) {
+            t = t.replace('%farm', fn);
+        }
+    }
+    if (d.name) {
+        let n = d.name;
+        while (t.indexOf('@') > -1) {
+            t = t.replace('@', n);
+        }
+    }
+    return t;
+}
+
+/**
+ * 事件字符串转HTML元素
+ * @param {string} s
+ * @param {TextInfoD} opd
+ * @param {HTMLDivElement}
+ */
+function eventToDiv(s, opd) {
+    let n = document.createElement('div');
+    if (s == "null") {
+        n.innerText = "Found data in Events data but is empty.";
+        return n;
+    }
+    let el = s.split("/");
+    console.log(el);
+    let c = 0;
+    el.forEach((e) => {
+        if (e.startsWith("speak")) {
+            let l = e.split(' ');
+            let d = document.createElement('div');
+            d.style.display = 'inline-block';
+            let d2 = document.createElement('div');
+            d2.innerText = getNPCName(l[1]);
+            d2.style.display = 'inline-block';
+            d.append(d2);
+            d.append(': ');
+            addBrToElement(d);
+            let d3 = document.createElement('div');
+            d3.style.display = 'inline-block';
+            l.splice(0, 2);
+            d3.innerText = dealTextInDialog(l.join(" "), opd);
+            d.append(d3);
+            n.append(d);
+            addBrToElement(n);
+            c++;
+        } else if (e.startsWith("message")) {
+            if (c) addBrToElement(n);
+            let l = e.split(' ');
+            let d = document.createElement('div');
+            d.style.display = 'inline-block';
+            l.splice(0, 1);
+            d.innerText = dealTextInDialog(l.join(" "), opd);
+            n.append(d);
+            addBrToElement(n);
+            if (c) addBrToElement(n);
+            c++;
+        }
+    })
+    if (!c) n.innerText = 'No text in this event.';
+    return n;
+}
+
+/**
+ * 处理看到过的事件
+ * @param {Element} node
+ * @param {TextInfoD} opd
+ * @returns {HTMLDivElement}
+ */
+function dealEventsSeen(node, opd) {
+    let l = IntArrElementToArr(node);
+    let n = document.createElement('div');
+    l.forEach((v) => {
+        if (v == -2) return; //结婚事件
+        let s = getEventsStrById(v);
+        if (s !== null) {
+            console.log(v);
+            console.log(s);
+            let t = "Event Id: " + v;
+            let d = eventToDiv(s, opd);
+            n.append(createFoldDiv(d, t));
+        } else {
+            console.log(v, "is empty");
+        }
+    })
+    return n;
+}
+
 function dealXML() {
     /**@type {Document}*/
     var doc = window['doc'];
@@ -1013,6 +1212,7 @@ function dealXML() {
         if (!l.length) return;
         tab.innerText = l[0].innerHTML;
         page.innerText = "Name: " + l[0].innerHTML;
+        let tinfo = new TextInfoD({ "name": l[0].innerHTML })
         l = getElementsByTagInFirst(v, "yearForSaveGame");
         if (!l.length) return;
         addBrToElement(page);
@@ -1169,6 +1369,14 @@ function dealXML() {
         var expdiv = createExpDiv(l[0], expL, l2[0]);
         var expdivd = createFoldDiv(expdiv, "Experience (Skill)");
         page.append(expdivd);
+        l2 = getElementsByTagInFirst(v, "farmName");
+        if (l2.length) tinfo.farmName = l2[0].innerHTML;
+        l2 = getElementsByTagInFirst(v, "eventsSeen");
+        if (l2.length) {
+            let evdiv = dealEventsSeen(l2[0], tinfo);
+            let evdivf = createFoldDiv(evdiv, "Events Seen")
+            page.append(evdivf);
+        }
         if (firstTab) {
             tab.classList.add("selected");
             page.classList.add("display");
